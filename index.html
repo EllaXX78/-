@@ -86,6 +86,19 @@
       opacity: 0.55;
     }
 
+    #canvas::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+
+      background: rgba(255, 255, 255, 0.18);
+
+      pointer-events: none;
+    }
+
     #look-bar {
       position: absolute;
       top: 16px;
