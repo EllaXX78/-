@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>偷成韩彬的小屎鞋</title>
+  <style>
+    @font-face {
+      font-family: 'Zpix';
+      src: url('./fonts/zpix.ttf') format('truetype');
+      font-display: swap;
+    }
+    
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f3f5fa;
+      --line: #e4e8f1;
+      --text: #20242d;
+      --muted: #707887;
+      --accent: #ffb6dc;
+      --accent-deep: #ff6fb3;
+      --danger: #eb325d;
+      --success: #f73f82;
+      --shadow: 0 10px 30px rgba(184, 199, 231, 0.08);
+      --shadow-soft: 0 8px 20px rgba(34, 44, 66, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8f9fd 0%, #eef2fb 100%);
+      font-family: 'Zpix', monospace;
+      color: white;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #wrap {
+      width: 100%;
+      max-width: 420px;
+      height: 100svh;
+      max-height: 760px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #canvas {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(255, 213, 74, 0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(105, 160, 255, 0.08), transparent 28%),
+        linear-gradient(180deg, #f8faff 0%, #f1f4fb 100%);
+    }
+
+    #canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.14) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.55;
+    }
+
+    #look-bar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      height: 14px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 999px;
+      overflow: hidden;
+      z-index: 4;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    #look-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ffd54a, #ffbf1f);
+      transition: width 0.05s linear;
+      border-radius: 999px;
+    }
+
+    #flash {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 77, 87, 0.14);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.08s;
+      z-index: 6;
+    }
+
+    #bubble {
+      position: absolute;
+      bottom: 300px;
+      right: 40px;
+      padding: 10px 14px;
+      border-radius: 16px;
+      background: #ff69b7;
+      border: 3px solid white;
+      box-shadow: var(--shadow-soft);
+      font-family: 'Zpix', monospace;
+      font-size: 13px;
+      color: white;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      pointer-events: none;
+      z-index: 4;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    #bubble.show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    #hanbin-wrap {
+      position: absolute;
+      right: 36px;
+      bottom: 110px;
+      z-index: 2;
+    }
+
+    #hanbin-avatar {
+      width: 104px;
+      height: 104px;
+      border-radius: 30px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.18s ease;
+      transform-origin: center center;
+    }
+
+    #hanbin-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #hanbin-fallback {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+      padding: 10px;
+    }
+
+    #eyes {
+      position: absolute;
+      top: -70px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 56px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--danger);
+      opacity: 0;
+      transition: opacity 0.12s;
+      text-shadow: 0 10px 24px rgba(255, 77, 87, 0.26);
+      white-space: nowrap;
+      z-index: 3;
+    }
+
+    #shoe-wrap {
+      position: absolute;
+      bottom: 107px;
+      z-index: 2;
+    }
+
+    #shoe-img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      display: none;
+      transition: opacity 0.25s ease;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
+    }
+
+    #shoe-fallback {
+      width: 64px;
+      height: 64px;
+      display: block;
+      opacity: 0.18;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.5);
+      border: 1px dashed rgba(120,130,150,0.28);
+    }
+
+    #hand {
+      position: absolute;
+      bottom: 104px;
+      left: 20px;
+      font-size: 48px;
+      line-height: 1;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.12));
+      transition: left 0.1s linear;
+      z-index: 2;
+    }
+
+    @keyframes tremble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-4deg); }
+      75% { transform: rotate(4deg); }
+    }
+
+    #ui {
+      background: rgba(255,255,255,0.96);
+      border-top: 1px solid var(--line);
+      padding: 18px 18px 26px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 -8px 24px rgba(34, 44, 66, 0.04);
+    }
+
+    #prog-track {
+      width: 100%;
+      height: 18px;
+      background: #ffd2ea;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 3px solid white;
+      box-shadow: 0 4px 0 #ff9ccc;
+    }
+
+    #prog-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff9ecf, #ff6fb3);
+      border-radius: 999px;
+      transition: width 0.08s;
+    }
+
+    #main-btn {
+      width: 88px;
+      height: 88px;
+      border: 4px solid white;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ffb6dc 0%, #ff6fb3 100%);
+      box-shadow:
+        0 6px 0 #ff8cc5,
+        0 10px 18px rgba(255,111,179,0.35);
+
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #main-btn::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      width: 50%;
+      height: 30%;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    #main-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    #main-btn.pressing::after {
+      opacity: 1;
+    }
+
+    #main-btn.danger {
+      background: linear-gradient(180deg, #ff7abf 0%, #ff3d9a 100%);
+      box-shadow: 0 10px 24px rgba(255, 61, 154, 0.45); 
+    }
+
+    #main-btn:active {
+      transform: scale(0.97);
+      box-shadow: 
+        0 4px 10px rgba(255, 111, 179, 0.25),
+        inset 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #title-ov {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background:
+        linear-gradient(180deg, #ffb7dc 0%, #ff7fc2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 24px;
+    }
+
+    #title-card {
+      width: 100%;
+      background: #ff8fca;
+      border: 4px solid white;
+      border-radius: 28px;
+      box-shadow: 0 8px 0 #ff65b2;
+      padding: 28px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #title-ov h1 {
+      font-family: 'Zpix', monospace;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .sub {
+      font-family: 'Zpix', monospace;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .rule-box {
+      background: #ff69b7;
+      border: 4px solid white;
+      border-radius: 18px;
+      padding: 16px;
+      font-family: 'Zpix', monospace;
+      font-size: 14px;
+      line-height: 1.95;
+      color: var(--muted);
+    }
+
+    .rule-box b {
+      color: white;
+    }
+
+    .start-btn {
+      width: 100%;
+      border: 4px solid white;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffb6dc 0%, #ff6fb3 100%);
+      color: white;
+      box-shadow:
+        0 6px 0 #ff8cc5,
+        0 10px 20px rgba(255,111,179,0.35);
+      color: white;
+      padding: 16px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      text-shadow: 0 3px 0 #ff4fa3;
+    }
+
+    .start-btn:active {
+      transform: scale(0.985);
+      box-shadow:
+        0 3px 0 #ff4fa3,
+        0 6px 12px rgba(255,111,179,0.28);
+    }
+
+    #end-ov {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(255, 117, 190, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    #end-ov.show {
+      display: flex;
+    }
+
+    #end-shell {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    #end-figure {
+      width: 200px;
+      height: 200px;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #ffffff;
+      border: 4px solid rgba(255,255,255,0.85);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #end-figure img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #end-figure-fallback {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+      padding: 10px;
+    }
+
+    #end-modal {
+      width: 100%;
+      background: #ff8fca;
+      border: 4px solid white;
+      border-radius: 26px;
+      box-shadow: 0 8px 0 #ff65b2;
+      padding: 24px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    #end-result {
+      font-family: 'Zpix', monospace;
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      text-align: center;
+      line-height: 1.5;
+      letter-spacing: -0.03em;
+    }
+
+    #end-desc {
+      font-family: 'Zpix', monospace;
+      font-size: 14px;
+      color: white;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .retry-btn {
+      width: 100%;
+      border: 4px solid white;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffb6dc 0%, #ff6fb3 100%);
+      color: white;
+      padding: 18px 16px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow:
+        0 6px 0 #ff4fa3,
+        0 10px 20px rgba(255,111,179,0.35);
+      text-shadow: 0 3px 0 #ff4fa3;
+    }
+
+    .retry-btn:active {
+      transform: scale(0.985);
+      box-shadow:
+        0 3px 0 #ff4fa3,
+        0 6px 12px rgba(255,111,179,0.28);
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="canvas">
+      <div id="look-bar"><div id="look-fill"></div></div>
+      <div id="flash"></div>
+
+      <div id="hanbin-wrap">
+        <div id="eyes">!!!</div>
+        <div id="hanbin-avatar">
+          <img id="hanbin-main-img" src="" alt="成韩彬" style="display:none;">
+          <div id="hanbin-fallback">在代码里插入<br>成韩彬图片</div>
+        </div>
+      </div>
+
+      <div id="shoe-wrap">
+        <img id="shoe-img" src="" alt="小黄鞋">
+        <div id="shoe-fallback"></div>
+      </div>
+
+      <div id="hand">🫳</div>
+      <div id="bubble"></div>
+    </div>
+
+    <div id="ui">
+      <div id="prog-track"><div id="prog-bar"></div></div>
+      <button id="main-btn" aria-label="偷鞋按钮"></button>
+    </div>
+
+    <div id="title-ov">
+      <div id="title-card">
+        <h1>小屎鞋大作战</h1>
+        <div class="sub">趁冰冰不注意，偷偷拿走丑丑的小屎鞋...</div>
+
+        <div class="rule-box">
+          <b>目标：</b>偷走小屎鞋<br>
+          <b>规则：</b>冰冰会随时回头逮捕小偷，你必须立刻停手<br>
+          <b>注意：</b>不要被冰冰抓住哦!<br>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">START</button>
+      </div>
+    </div>
+
+    <div id="end-ov">
+      <div id="end-shell">
+        <div id="end-figure">
+          <img id="end-hanbin-img" src="" alt="结局图" style="display:none;">
+          <div id="end-figure-fallback">这里放结局时显示的<br>成韩彬图片</div>
+        </div>
+
+        <div id="end-modal">
+          <div id="end-result"></div>
+          <div id="end-desc"></div>
+          <button class="retry-btn" onclick="resetGame()">RESTART</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let progress = 0, isLooking = false, isHolding = false, gameActive = false;
+    let lookTimer = null, lookEndTimer = null, holdIv = null, lookBarIv = null;
+    let lookBarPct = 0;
+
+    const canvas = document.getElementById('canvas');
+    const handEl = document.getElementById('hand');
+    const hanAvatar = document.getElementById('hanbin-avatar');
+    const shoeWrap = document.getElementById('shoe-wrap');
+    const shoeImg = document.getElementById('shoe-img');
+    const shoeFallback = document.getElementById('shoe-fallback');
+    const eyesEl = document.getElementById('eyes');
+    const bubbleEl = document.getElementById('bubble');
+    const flashEl = document.getElementById('flash');
+    const progBar = document.getElementById('prog-bar');
+    const btn = document.getElementById('main-btn');
+    const lookFill = document.getElementById('look-fill');
+    const endOv = document.getElementById('end-ov');
+
+    let X_START = 20, X_END = 200;
+
+    function layout() {
+      const w = canvas.offsetWidth;
+      X_START = 20;
+      X_END = w - 188 - 24;
+      positionShoe();
+      updateHand();
+    }
+
+    function positionShoe() {
+      shoeWrap.style.right = (36 + 110) + 'px';
+    }
+
+    function updateHand() {
+      const x = X_START + (progress / 100) * (X_END - X_START);
+      handEl.style.left = x + 'px';
+      handEl.style.animation = progress > 65 ? 'tremble 0.13s infinite' : 'none';
+    }
+
+    function startGame() {
+      document.getElementById('title-ov').style.display = 'none';
+      gameActive = true;
+      layout();
+      scheduleLook();
+    }
+
+    function lookDelay() {
+      const base = 1800 - progress * 12;
+      return Math.max(500, base + (Math.random() - 0.5) * 400);
+    }
+
+    function scheduleLook() {
+      if (!gameActive) return;
+      clearTimeout(lookTimer);
+      lookTimer = setTimeout(() => {
+        if (gameActive) triggerLook();
+      }, lookDelay());
+    }
+
+    const LOOK_LINES = ['응?', '谁在动?', '......？', '窝听到了哦', '谁要偷窝的小屎鞋!'];
+    const RELAX_LINES = ['（好奇怪诶...）', '（继续做色彩测试）', '（呼）', '(哼哼谁都不可以分开窝和小屎鞋)'];
+
+    function triggerLook() {
+      if (!gameActive) return;
+      isLooking = true;
+      eyesEl.style.opacity = '1';
+      hanAvatar.style.transform = 'translateY(-2px) scale(1.14)';
+      document.getElementById("hanbin-main-img").src = HANBIN_LOOK_IMAGE;
+      btn.classList.add('danger');
+      showBubble(LOOK_LINES[Math.floor(Math.random() * LOOK_LINES.length)]);
+
+      if (isHolding) {
+        caught();
+        return;
+      }
+
+      const dur = 900 + Math.random() * 1400;
+      startLookBar(dur);
+
+      clearTimeout(lookEndTimer);
+      lookEndTimer = setTimeout(() => {
+        endLook();
+        const p = 0.04 + (progress / 100) * 0.14;
+        if (Math.random() < p) {
+          setTimeout(() => {
+            if (gameActive && !isHolding) triggerLook();
+          }, 950 + Math.random() * 1000);
+        }
+      }, dur);
+    }
+
+    function endLook() {
+      if (!gameActive) return;
+      isLooking = false;
+      clearInterval(lookBarIv);
+      document.getElementById("hanbin-main-img").src = HANBIN_MAIN_IMAGE;
+      lookFill.style.transition = 'width 0.35s';
+      lookFill.style.width = '0%';
+      setTimeout(() => {
+        lookFill.style.transition = 'width 0.05s linear';
+      }, 400);
+
+      eyesEl.style.opacity = '0';
+      hanAvatar.style.transform = '';
+      btn.classList.remove('danger');
+      showBubble(RELAX_LINES[Math.floor(Math.random() * RELAX_LINES.length)], 1100);
+      scheduleLook();
+    }
+
+    function startLookBar(dur) {
+      lookBarPct = 0;
+      lookFill.style.width = '0%';
+      clearInterval(lookBarIv);
+      lookBarIv = setInterval(() => {
+        lookBarPct += 100 / (dur / 50);
+        lookFill.style.width = Math.min(lookBarPct, 100) + '%';
+        if (lookBarPct >= 100) clearInterval(lookBarIv);
+      }, 50);
+    }
+
+    function showBubble(text, hide) {
+      bubbleEl.textContent = text;
+      bubbleEl.classList.add('show');
+      if (hide) {
+        setTimeout(() => bubbleEl.classList.remove('show'), hide);
+      }
+    }
+
+    function startHold() {
+      if (!gameActive) return;
+      if (isLooking) {
+        caught();
+        return;
+      }
+
+      isHolding = true;
+      btn.classList.add('pressing');
+      handEl.textContent = '🫳';
+
+      clearInterval(holdIv);
+      holdIv = setInterval(() => {
+        if (!gameActive || !isHolding) {
+          clearInterval(holdIv);
+          return;
+        }
+
+        if (isLooking) {
+          caught();
+          clearInterval(holdIv);
+          return;
+        }
+
+        progress = Math.min(progress + 1.0, 100);
+        updateHand();
+        progBar.style.width = progress + '%';
+
+        if (progress >= 96) {
+          progress = 100;
+          updateHand();
+          progBar.style.width = '100%';
+          clearInterval(holdIv);
+          isHolding = false;
+          success();
+        }
+      }, 40);
+    }
+
+    function endHold() {
+      if (!isHolding) return;
+      isHolding = false;
+      clearInterval(holdIv);
+      btn.classList.remove('pressing');
+      handEl.textContent = '🫶';
+    }
+
+    function caught() {
+      if (!gameActive) return;
+      gameActive = false;
+      isHolding = false;
+      clearInterval(holdIv);
+      clearTimeout(lookTimer);
+      clearTimeout(lookEndTimer);
+      clearInterval(lookBarIv);
+
+      flashEl.style.opacity = '1';
+      eyesEl.style.opacity = '1';
+
+      setTimeout(() => {
+        flashEl.style.opacity = '0';
+        showModal(false);
+      }, 550);
+    }
+
+    function success() {
+      if (!gameActive) return;
+      gameActive = false;
+      clearTimeout(lookTimer);
+      clearTimeout(lookEndTimer);
+      shoeImg.style.opacity = '0';
+      shoeFallback.style.opacity = '0';
+      handEl.textContent = '😘';
+      setTimeout(() => showModal(true), 450);
+    }
+
+    function showModal(win) {
+      btn.classList.remove('pressing', 'danger');
+
+      const result = document.getElementById('end-result');
+      const desc = document.getElementById('end-desc');
+      const endImg = document.getElementById('end-hanbin-img');
+
+      result.textContent = win ? '成功得手!' : '被发现了!';
+      result.style.color = win ? 'var(--success)' : 'var(--danger)';
+
+      desc.textContent = win
+        ? '你成功偷走了小屎鞋。\n从此练习室里\n只会出现穿着美丽私服的冰冰吧...\n?'
+        : '你被抓住惹!!!\n成韩彬穿上已经开胶的小屎鞋，\n非常得意地看着你。\n果然，他和小屎鞋的羁绊不可小觑呢...';
+
+      endImg.src = win ? END_SUCCESS_IMAGE : END_FAIL_IMAGE;
+      endImg.style.display = "block";
+      document.getElementById('end-figure-fallback').style.display = "none";
+
+      endOv.classList.add('show');
+    }
+
+    function resetGame() {
+      endOv.classList.remove('show');
+      progress = 0;
+      isLooking = false;
+      isHolding = false;
+      gameActive = true;
+
+      progBar.style.width = '0%';
+      updateHand();
+      handEl.textContent = '🫶';
+      hanAvatar.style.transform = '';
+      document.getElementById("hanbin-main-img").src = HANBIN_MAIN_IMAGE;
+      shoeImg.style.opacity = '1';
+      shoeFallback.style.opacity = shoeImg.style.display === 'block' ? '0' : '0.18';
+      eyesEl.style.opacity = '0';
+      bubbleEl.classList.remove('show');
+      lookFill.style.width = '0%';
+      flashEl.style.opacity = '0';
+      btn.classList.remove('pressing', 'danger');
+
+      scheduleLook();
+    }
+
+    btn.addEventListener('mousedown', startHold);
+    btn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      startHold();
+    }, { passive: false });
+
+    btn.addEventListener('mouseup', endHold);
+    btn.addEventListener('mouseleave', endHold);
+    btn.addEventListener('touchend', endHold);
+    btn.addEventListener('touchcancel', endHold);
+
+    window.addEventListener('resize', layout);
+    window.addEventListener('load', layout);
+
+    const HANBIN_MAIN_IMAGE = "./images/Hanbin.JPG";
+    const HANBIN_LOOK_IMAGE = "./images/HanbinLook.JPG";
+    const SHOE_MAIN_IMAGE = "./images/shoe.png";
+    const END_SUCCESS_IMAGE = "./images/success.jpg";
+    const END_FAIL_IMAGE = "./images/failure.jpg";
+
+    function applyImage(imgId, fallbackId, src) {
+      const img = document.getElementById(imgId);
+      const fallback = document.getElementById(fallbackId);
+
+      if (src && src.trim() !== "") {
+        img.src = src;
+        img.style.display = "block";
+        fallback.style.display = "none";
+      } else {
+        img.style.display = "none";
+        fallback.style.display = "block";
+      }
+    }
+
+    applyImage("hanbin-main-img", "hanbin-fallback", HANBIN_MAIN_IMAGE);
+    applyImage("shoe-img", "shoe-fallback", SHOE_MAIN_IMAGE);
+    applyImage("end-hanbin-img", "end-figure-fallback", END_HANBIN_IMAGE);
+  </script>
+</body>
+</html>
